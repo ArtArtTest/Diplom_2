@@ -2,8 +2,7 @@ import json
 import uuid
 import requests
 import allure
-
-BASE_URL = "https://stellarburgers.education-services.ru/api"
+from data import BASE_URL
 
 def generate_unique_email():
     return f"test_user_{uuid.uuid4().hex}@example.com"

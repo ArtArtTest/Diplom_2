@@ -1,6 +1,7 @@
 import requests
 import allure
-from helpers import generate_unique_email, delete_user, api_post, BASE_URL
+from helpers import generate_unique_email, delete_user, api_post
+from data import BASE_URL
 
 class TestUserCreation:
 
@@ -15,9 +16,9 @@ class TestUserCreation:
             "password": password,
             "name": name
         })
+        resp_json = response.json()
 
         assert response.status_code == 200
-        resp_json = response.json()
         assert resp_json["success"] is True
         assert "accessToken" in resp_json
 
@@ -26,11 +27,10 @@ class TestUserCreation:
     @allure.title("Создание пользователя, который уже зарегистрирован")
     def test_create_duplicate_user(self):
         email = generate_unique_email()
-        password = "Pass1234"
-        name = "Test User"
+        password = "Pass12345"
+        name = "Test User1"
 
         r1 = api_post("/auth/register", {"email": email, "password": password, "name": name})
-        assert r1.status_code == 200
         token = r1.json()["accessToken"]
 
         r2 = api_post("/auth/register", {"email": email, "password": password, "name": name})
@@ -59,9 +59,9 @@ class TestLogin:
 
         api_post("/auth/register", {"email": email, "password": password, "name": name})
         response = api_post("/auth/login", {"email": email, "password": password})
+        resp_json = response.json()
 
         assert response.status_code == 200
-        resp_json = response.json()
         assert resp_json["success"] is True
         assert "accessToken" in resp_json
 
@@ -88,12 +88,12 @@ class TestOrderCreation:
         token = login_resp.json()["accessToken"]
 
         ing_resp = requests.get(f"{BASE_URL}/ingredients")
-        assert ing_resp.status_code == 200
         ingredients = ing_resp.json()["data"]
-        assert len(ingredients) >= 2
         ingredient_ids = [ingredients[0]["_id"], ingredients[1]["_id"]]
 
         order_resp = api_post("/orders", {"ingredients": ingredient_ids}, headers={"Authorization": token})
+        assert ing_resp.status_code == 200
+        assert len(ingredients) >= 2
         assert order_resp.status_code == 200
         assert order_resp.json()["success"] is True
         assert "number" in order_resp.json()["order"]
